@@ -5,6 +5,6 @@ Investigation of the effects of "we"-framing on young children's senses of commi
 
 "WESCH Data.csv" contains the complete dataset for all participants included in the analyses reported in the manuscript.
 
-"WESCH" = We-framing: Sharing, Commitment, and Helping (>:
+"WESCH" = We-framing: Sharing, Commitment, and Helping. (>:
 
 "The manuscript" refers to Vasil & Tomasello (20XX). [To be updated after manuscript publication]
