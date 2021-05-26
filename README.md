@@ -7,4 +7,4 @@ Investigation of the effects of "we"-framing on young children's senses of commi
 
 "WESCH" = We-framing: Sharing, Commitment, and Helping. (>:
 
-"The manuscript" refers to Vasil & Tomasello (20XX). [To be updated after manuscript publication]
+"The manuscript" refers to Vasil & Tomasello (20XX). Effects of “We”-framing on Young Children’s Commitment, Sharing, and Helping. [To be updated after manuscript publication]
