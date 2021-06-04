@@ -1,5 +1,5 @@
-# we-framing-CSH
-Investigation of the effects of "we"-framing on young children's senses of commitment, fairness, and helping towards a collaborative partner.
+# wesch
+Investigation of the effects of "we"-framing on young children's senses of sharing, commitment, and helping towards a collaborative partner.
 
 "WESCH Code.R" contains the R code for running all analyses reported in the manuscript (and a few not reported in the manuscript).
 
