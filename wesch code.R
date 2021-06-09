@@ -43,7 +43,8 @@ prior_latencies <- c(
   set_prior("normal(0,0.4)", class = "b")) #median = exp(3.25)*exp(0) = 25.8s; -2sd = exp(3.25)*exp(-0.8) = 11.6s; +2sd = exp(3.25)*exp(-0.8) = 57.4s
 
 prior_survival <- c(
-  set_prior("normal(0,1)", class = "b")) # exp(0) = median hazard ratio of non-intercept predictors; hazard ratio of 1 = no change between levels of predictor; exp(1) # = 1SD of hazard ratio of non-intercept predictors; coefficient estimates must be exponentiated to get the hazard ratio
+  set_prior("normal(0,1)", class = "b")) #exp(0) = median hazard ratio of non-intercept predictors; hazard ratio of 1 = no change between levels of predictor;
+                                         #exp(1) # = 1SD of hazard ratio of non-intercept predictors; coefficient estimates must be exponentiated to get the hazard ratio
 
 ##Commitment
 #Data
