@@ -7,7 +7,7 @@ library(brms)
 set.seed(31)
 
 ##Data
-wesch_data <- read_xlsx("WESCH Data.xlsx") %>% 
+wesch_data <- read_xlsx("wesch data.xlsx") %>% 
   clean_names() %>% 
   mutate(condition_string = as.factor(condition_string),
          age_group_string = as.factor(age_group_string),
