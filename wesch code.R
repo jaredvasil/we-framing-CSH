@@ -653,7 +653,7 @@ greaterthan0_helplatency <- hypothesis(helping_glmm4,
 loo_help4 <- loo(helping_glmm4)
 loo_help5 <- loo(helping_glmm5)
 loo_help6 <- loo(helping_glmm6)
-loo_help_latency <- loo_compare(loo_help4, loo_help5, loo_help4)
+loo_help_latency <- loo_compare(loo_help4, loo_help5, loo_help6)
 
 ##Main Text: Table 4
 table_fixef <- rbind(fixef(commit_glmm1),
