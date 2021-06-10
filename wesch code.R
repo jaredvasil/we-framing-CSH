@@ -47,34 +47,6 @@ prior_latencies <- c(
 prior_survival <- c(
   set_prior("normal(0,1)", class = "b")) #exp(0) = median hazard ratio of non-intercept predictors; hazard ratio of 1 = no change between levels of predictor;
                                          #exp(1) # = 1SD of hazard ratio of non-intercept predictors; coefficient estimates must be exponentiated to get the hazard ratio
-
-##Determining random effects structure
-random_ord <- brm(helping_latency ~ 1 + (1|order),
-                  data = helping,
-                  family = lognormal,
-                  iter = 10000,
-                  warmup = 2000,
-                  chains = 4,
-                  cores = 4,
-                  save_pars = save_pars(all = TRUE),
-                  control = list(adapt_delta = 0.999, max_treedepth = 50))
-summary(random_ord)
-
-random_loc <- brm(helping_latency ~ 1 + (1|location_string),
-                  data = helping,
-                  family = lognormal,
-                  iter = 10000,
-                  warmup = 2000,
-                  chains = 4,
-                  cores = 4,
-                  save_pars = save_pars(all = TRUE),
-                  control = list(adapt_delta = 0.999, max_treedepth = 50))
-
-loo_random_ord <- loo(random_ord)
-loo_random_loc <- loo(random_loc)
-loo_random_compared <- loo_compare(loo_random_ord, loo_random_loc)
-bayes_factor(random_ord, random_loc)
-
 ##Commitment
 #Data
 commit_tendency <- wesch_data %>% 
