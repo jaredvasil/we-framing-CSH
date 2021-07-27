@@ -7,14 +7,16 @@ library(brms)
 set.seed(31)
 
 ##Data
-wesch_data <- read_xlsx("wesch data.xlsx") %>% 
+wesch_data <- read_csv("wesch data.csv") %>% 
   clean_names() %>% 
   mutate(condition_string = as.factor(condition_string),
          age_group_string = as.factor(age_group_string),
          location_string = as.factor(location_string),
          gender_string = as.factor(gender_string),
          first = as.factor(first)) %>% 
-  rename(order = first)
+  rename(order = first) %>% 
+  select(-c(x23, "x25":"x28")) %>% 
+  na.omit("count")
 
 wesch_data$age_group_string <- relevel(wesch_data$age_group_string, ref = "Younger")
 wesch_data$condition_string <- relevel(wesch_data$condition_string, ref = "You")
@@ -47,6 +49,7 @@ prior_latencies <- c(
 prior_survival <- c(
   set_prior("normal(0,1)", class = "b")) #exp(0) = median hazard ratio of non-intercept predictors; hazard ratio of 1 = no change between levels of predictor;
                                          #exp(1) # = 1SD of hazard ratio of non-intercept predictors; coefficient estimates must be exponentiated to get the hazard ratio
+
 ##Commitment
 #Data
 commit_tendency <- wesch_data %>% 
@@ -131,6 +134,19 @@ postprob_commit_tendency <- tibble("Posterior probability" = post_prob(commit_gl
   relocate("Model",.before = "Posterior probability")
 BF_commit_tendency <- tibble("Bayes factor" = sort(postprob_commit_tendency$"Posterior probability",T)[1]/sort(postprob_commit_tendency$"Posterior probability",T)[2])
 
+#Robustness analysis
+postprob_commit_tendency0 <- tibble("Posterior probability" = post_prob(commit_glmm1, commit_glmm2, commit_glmm3, prior_prob = c(0.5, 0.25, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_commit_tendency1 <- tibble("Posterior probability" = post_prob(commit_glmm1, commit_glmm2, commit_glmm3, prior_prob = c(0.25, 0.5, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_commit_tendency2 <- tibble("Posterior probability" = post_prob(commit_glmm1, commit_glmm2, commit_glmm3, prior_prob = c(0.25, 0.25, 0.5))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
 greaterthan0_committendency <- hypothesis(commit_glmm1,
                                           c("Intercept > 0",
                                             "age_group_stringOlder > 0",
@@ -154,6 +170,8 @@ commit_glmm4 <- brm(approach_n_y ~ age_group_string + (1|location_string) + (1|o
 
 plot(commit_glmm4)
 pp_check(commit_glmm4, nsamples = 100)
+hypothesis(commit_glmm4, 
+           "age_group_stringOlder < 0")
 
 #Abandoning tendency: Looking at age within you-framing
 commit_glmm5 <- brm(approach_n_y ~ age_group_string + (1|location_string) + (1|order),
@@ -198,7 +216,7 @@ plot(commit_glmm7)
 pp_check(commit_glmm7, nsamples = 100)
 
 #Latency to abandon (Removed location and order random intercepts, produced divergences; included order fixed effect)
-commit_glmm8 <- brm(commitment_latency ~ age_group_string + gender_string + location_string,
+commit_glmm8 <- brm(commitment_latency|trunc(ub = 60) ~ age_group_string + gender_string + location_string,
                     data = commit_latency,
                     family = lognormal,
                     prior = prior_latencies,
@@ -208,7 +226,7 @@ commit_glmm8 <- brm(commitment_latency ~ age_group_string + gender_string + loca
                     save_pars = save_pars(all = TRUE),
                     cores = 4)
 
-commit_glmm9 <- brm(commitment_latency ~ condition_string + age_group_string + gender_string + location_string,
+commit_glmm9 <- brm(commitment_latency|trunc(ub = 60) ~ condition_string + age_group_string + gender_string + location_string,
                     data = commit_latency,
                     family = lognormal,
                     prior = prior_latencies,
@@ -218,7 +236,7 @@ commit_glmm9 <- brm(commitment_latency ~ condition_string + age_group_string + g
                     save_pars = save_pars(all = TRUE),
                     cores = 4)
 
-commit_glmm10 <- brm(commitment_latency ~ condition_string * age_group_string + gender_string + location_string,
+commit_glmm10 <- brm(commitment_latency|trunc(ub = 60) ~ condition_string * age_group_string + gender_string + location_string,
                      data = commit_latency,
                      family = lognormal,
                      prior = prior_latencies,
@@ -227,13 +245,6 @@ commit_glmm10 <- brm(commitment_latency ~ condition_string * age_group_string + 
                      control = list(adapt_delta = 0.9999, max_treedepth = 50),
                      save_pars = save_pars(all = TRUE),
                      cores = 4)
-
-#using truncated distribution for prior predictive checks provides reasonable estimates.
-#the bridge sampler (used to compute the posterior probability) tends to give an error
-#when computing the posterior probability of truncated distributions, and the posterior
-#probabilities seem implausible when the bridge sampler does work. i think the best
-#method currently available is to use the truncated model (ub = 60) to generate simulated
-#data used in prior predictive checks, and then fit the non-truncated model to the data.
 
 conditional_effects(commit_glmm8)
 conditional_effects(commit_glmm9)
@@ -251,6 +262,19 @@ postprob_commit_latency <- tibble("Posterior probability" = post_prob(commit_glm
   mutate("Model" = c("Null", "Reduced", "Full")) %>% 
   relocate("Model",.before = "Posterior probability")
 BF_commit_latency <- tibble("Bayes factor" = sort(postprob_commit_latency$"Posterior probability",T)[1]/sort(postprob_commit_latency$"Posterior probability",T)[2])
+
+#Robustness analysis
+postprob_commit_latency0 <- tibble("Posterior probability" = post_prob(commit_glmm8, commit_glmm9, commit_glmm10, prior_prob = c(0.5, 0.25, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_commit_latency1 <- tibble("Posterior probability" = post_prob(commit_glmm8, commit_glmm9, commit_glmm10, prior_prob = c(0.25, 0.5, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_commit_latency2 <- tibble("Posterior probability" = post_prob(commit_glmm8, commit_glmm9, commit_glmm10, prior_prob = c(0.25, 0.25, 0.5))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
 
 greaterthan0_commitlatency <- hypothesis(commit_glmm8,
                                      c("Intercept > 0",
@@ -311,6 +335,19 @@ postprob_commit_takeleave <- tibble("Posterior probability" = post_prob(commit_g
   mutate("Model" = c("Null", "Reduced", "Full")) %>% 
   relocate("Model", .before = "Posterior probability")
 BF_commit_takeleave <- tibble("Bayes factor" = sort(postprob_commit_takeleave$"Posterior probability",T)[1]/sort(postprob_commit_takeleave$"Posterior probability",T)[2])
+
+#Robustness analysis
+postprob_commit_takeleave0 <- tibble("Posterior probability" = post_prob(commit_glmm11, commit_glmm12, commit_glmm13, prior_prob = c(0.5, 0.25, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_commit_takeleave1 <- tibble("Posterior probability" = post_prob(commit_glmm11, commit_glmm12, commit_glmm13, prior_prob = c(0.25, 0.5, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_commit_takeleave2 <- tibble("Posterior probability" = post_prob(commit_glmm11, commit_glmm12, commit_glmm13, prior_prob = c(0.25, 0.25, 0.5))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
 
 greaterthan0_takeleave <- hypothesis(commit_glmm13,
                                      c("Intercept > 0",
@@ -448,6 +485,19 @@ postprob_share <- tibble("Posterior probability" = post_prob(sharing_glmm1, shar
   relocate("Model",.before = "Posterior probability")
 BF_share <- tibble("Bayes factor" = sort(postprob_share$"Posterior probability",T)[1]/sort(postprob_share$"Posterior probability",T)[2])
 
+#Robustness analysis
+postprob_share0 <- tibble("Posterior probability" = post_prob(sharing_glmm1, sharing_glmm2, sharing_glmm3, prior_prob = c(0.5, 0.25, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_share1 <- tibble("Posterior probability" = post_prob(sharing_glmm1, sharing_glmm2, sharing_glmm3, prior_prob = c(0.25, 0.5, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_share2 <- tibble("Posterior probability" = post_prob(sharing_glmm1, sharing_glmm2, sharing_glmm3, prior_prob = c(0.25, 0.25, 0.5))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
 greaterthan0_sharing <- hypothesis(sharing_glmm1,
                                    c("Intercept > 0",
                                      "age_group_stringOlder > 0",
@@ -581,6 +631,19 @@ postprob_help_tendency <- tibble("Posterior probability" = post_prob(helping_glm
   relocate("Model",.before = "Posterior probability")
 BF_help_tendency <- tibble("Bayes factor" = sort(postprob_help_tendency$"Posterior probability",T)[1]/sort(postprob_help_tendency$"Posterior probability",T)[2])
 
+#Robustness analysis
+postprob_help_tendency0 <- tibble("Posterior probability" = post_prob(helping_glmm1, helping_glmm2, helping_glmm3, prior_prob = c(0.5, 0.25, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_help_tendency1 <- tibble("Posterior probability" = post_prob(helping_glmm1, helping_glmm2, helping_glmm3, prior_prob = c(0.25, 0.5, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_help_tendency2 <- tibble("Posterior probability" = post_prob(helping_glmm1, helping_glmm2, helping_glmm3, prior_prob = c(0.25, 0.25, 0.5))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
 greaterthan0_helptendency <- hypothesis(helping_glmm1,
                                         c("Intercept > 0",
                                           "age_group_stringOlder > 0",
@@ -596,7 +659,7 @@ loo_help3 <- loo(helping_glmm3)
 loo_help_tendency <- loo_compare(loo_help1, loo_help2, loo_help3)
 
 #Latency to help (Removed location and order random intercepts, produced divergences; included order fixed effect)
-helping_glmm4 <- brm(helping_latency ~ age_group_string + gender_string + location_string,
+helping_glmm4 <- brm(helping_latency|trunc(ub = 60) ~ age_group_string + gender_string + location_string,
                      data = help_latency,
                      family = lognormal,
                      prior = prior_latencies,
@@ -606,7 +669,7 @@ helping_glmm4 <- brm(helping_latency ~ age_group_string + gender_string + locati
                      save_pars = save_pars(all = TRUE),
                      cores = 4)
 
-helping_glmm5 <- brm(helping_latency ~ condition_string + age_group_string + gender_string + location_string,
+helping_glmm5 <- brm(helping_latency|trunc(ub = 60) ~ condition_string + age_group_string + gender_string + location_string,
                      data = help_latency,
                      family = lognormal,
                      prior = prior_latencies,
@@ -616,7 +679,7 @@ helping_glmm5 <- brm(helping_latency ~ condition_string + age_group_string + gen
                      save_pars = save_pars(all = TRUE),
                      cores = 4)
 
-helping_glmm6 <- brm(helping_latency ~ condition_string * age_group_string + gender_string + location_string,
+helping_glmm6 <- brm(helping_latency|trunc(ub = 60) ~ condition_string * age_group_string + gender_string + location_string,
                       data = help_latency,
                       family = lognormal,
                       prior = prior_latencies,
@@ -642,6 +705,19 @@ postprob_help_latency <- tibble("Posterior probability" = post_prob(helping_glmm
   mutate("Model" = c("Null", "Reduced", "Full")) %>% 
   relocate("Model",.before = "Posterior probability")
 BF_help_latency <- tibble("Bayes factor" = sort(postprob_help_latency$"Posterior probability",T)[1]/sort(postprob_help_latency$"Posterior probability",T)[2])
+
+#Robustness analysis
+postprob_help_latency0 <- tibble("Posterior probability" = post_prob(helping_glmm4, helping_glmm5, helping_glmm6, prior_prob = c(0.5, 0.25, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_help_latency1 <- tibble("Posterior probability" = post_prob(helping_glmm4, helping_glmm5, helping_glmm6, prior_prob = c(0.25, 0.5, 0.25))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
+
+postprob_help_latency2 <- tibble("Posterior probability" = post_prob(helping_glmm4, helping_glmm5, helping_glmm6, prior_prob = c(0.25, 0.25, 0.5))) %>% 
+  mutate("Model" = c("Null", "Reduced", "Full")) %>% 
+  relocate("Model",.before = "Posterior probability")
 
 greaterthan0_helplatency <- hypothesis(helping_glmm4,
                                        c("Intercept > 0",
@@ -679,12 +755,12 @@ ggplot(fig2_commit_tendency, aes(x = age_group_string, fill = factor(approach_n_
   labs(x = "Age group", y = "Proportion of participants", fill = "Participant decision") + 
   scale_fill_manual(values = c("lightblue", "limegreen"), labels = c("Abandon E1","Remain with E1"), limits = c("1", "0")) +
   geom_text(stat = "count", aes(y = ..count.., label = ..count..), position = "fill", vjust = 1.5, size = 8) +
-  geom_text(aes(x = 1.5,  y = 1.03, label = asterisk), size = 10) + 
+  geom_text(aes(x = 1.5,  y = 1.03, label = asterisk), size = 8) + 
   theme(text = element_text(size = 30),
         axis.title.y = element_text(vjust = 2),
         axis.title.x = element_text(vjust = 0.25))
 
-ggsave("Figure 2.png", height = 14, width = 13)
+ggsave("Figure 2.png", height = 14, width = 14)
 
 ##Main Text: Figure 3
 fig3_leave_taking <- leave_taking %>% 
@@ -696,7 +772,7 @@ fig3_leave_taking <- leave_taking %>%
 ggplot(fig3_leave_taking, aes(x = condition_string, fill = factor(leave_taking_verbal_and_nonverbal, levels = c(0,1)))) +
   geom_bar(position = "fill") +
   facet_grid(cols = vars(age_group_string)) +
-  labs(x = "Age group", y = "Proportion of participants", fill = "Participant decision") + 
+  labs(x = "Condition", y = "Proportion of participants", fill = "Participant decision") + 
   scale_fill_manual(values = c("navajowhite2","palegreen4"), labels = c("Spontaneously leave", "Take leave"), limits = c("0", "1")) +
   geom_text(stat = "count", aes(label = ..count..), position = "fill", vjust = 1.5,  size = 8) +
   geom_text(aes(x = 1.5,  y = 1.03, label = dagger), size = 8) + 
@@ -706,7 +782,7 @@ ggplot(fig3_leave_taking, aes(x = condition_string, fill = factor(leave_taking_v
 
 ggsave("Figure 3.png", height = 14, width = 14)
 
-##Supplementary Material
+ ##Supplementary Material
 #Data
 commit_latency_surv <- wesch_data %>% 
   mutate(censored = ifelse(commitment_latency > 60, "right", "none"),
@@ -812,17 +888,17 @@ postprob_help_surv <- tibble("Posterior probability" = post_prob(helping_glmm1_s
   relocate("Model",.before = "Posterior probability")
 BF_help_surv <- tibble("Bayes factor" = sort(postprob_help_surv$"Posterior probability",T)[1]/sort(postprob_help_surv$"Posterior probability",T)[2])
 
-loo_help1_surv <- loo(helping_glmm1_surv)
-loo_help2_surv <- loo(helping_glmm2_surv)
-loo_help3_surv <- loo(helping_glmm3_surv)
-loo_help_surv <- loo_compare(loo_help1_surv, loo_help2_surv, loo_help3_surv)
-
 greaterthan0_helpsurv <- hypothesis(helping_glmm1_surv,
                                     c("Intercept > 0",
                                       "age_group_stringOlder > 0",
                                       "gender_stringMale > 0",
                                       "location_stringMarbles > 0",
                                       "location_stringMOLS > 0"))
+
+loo_help1_surv <- loo(helping_glmm1_surv)
+loo_help2_surv <- loo(helping_glmm2_surv)
+loo_help3_surv <- loo(helping_glmm3_surv)
+loo_help_surv <- loo_compare(loo_help1_surv, loo_help2_surv, loo_help3_surv)
 
 #Supplementary Material Table 1
 commit_glmm1_surv_df <- fixef(commit_glmm1_surv) %>% 
