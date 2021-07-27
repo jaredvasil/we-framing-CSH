@@ -8,7 +8,7 @@ set.seed(31)
 
 ##Data
 wesch_data <- read_csv("wesch data.csv") %>% 
-  clean_names() %>% 
+  clean_names() %>%
   mutate(condition_string = as.factor(condition_string),
          age_group_string = as.factor(age_group_string),
          location_string = as.factor(location_string),
