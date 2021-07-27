@@ -15,7 +15,8 @@ wesch_data <- read_csv("wesch data.csv") %>%
          gender_string = as.factor(gender_string),
          first = as.factor(first)) %>% 
   rename(order = first) %>% 
-  select(-c(x23, "x25":"x28"))
+  select(-c(x23, "x25":"x28")) %>% 
+  na.omit()
 
 wesch_data$age_group_string <- relevel(wesch_data$age_group_string, ref = "Younger")
 wesch_data$condition_string <- relevel(wesch_data$condition_string, ref = "You")
