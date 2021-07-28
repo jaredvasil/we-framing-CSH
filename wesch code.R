@@ -152,11 +152,6 @@ greaterthan0_committendency <- hypothesis(commit_glmm1,
                                             "age_group_stringOlder > 0",
                                             "gender_stringMale > 0"))
 
-loo_commit1 <- loo(commit_glmm1)
-loo_commit2 <- loo(commit_glmm2)
-loo_commit3 <- loo(commit_glmm3)
-loo_commit_tendency <- loo_compare(loo_commit1, loo_commit2, loo_commit3)
-
 #Abandoning tendency: Looking at age within we-framing
 commit_glmm4 <- brm(approach_n_y ~ age_group_string + (1|location_string) + (1|order),
                     data = commit_tendency_we,
@@ -170,6 +165,7 @@ commit_glmm4 <- brm(approach_n_y ~ age_group_string + (1|location_string) + (1|o
 
 plot(commit_glmm4)
 pp_check(commit_glmm4, nsamples = 100)
+
 hypothesis(commit_glmm4, 
            "age_group_stringOlder < 0")
 
@@ -283,11 +279,6 @@ greaterthan0_commitlatency <- hypothesis(commit_glmm8,
                                        "location_stringMarbles > 0",
                                        "location_stringMOLS > 0"))
 
-loo_commit8 <- loo(commit_glmm8)
-loo_commit9 <- loo(commit_glmm9)
-loo_commit10 <- loo(commit_glmm10)
-loo_commit_latency <- loo_compare(loo_commit8, loo_commit9, loo_commit10)
-
 #Leave-taking
 commit_glmm11 <- brm(leave_taking_verbal_and_nonverbal ~ age_group_string + gender_string + (1|location_string) + (1|order),
                      data = leave_taking,
@@ -356,11 +347,6 @@ greaterthan0_takeleave <- hypothesis(commit_glmm13,
                                        "gender_stringMale > 0",
                                        "condition_stringWe:age_group_stringOlder > 0"))
 
-loo_commit11 <- loo(commit_glmm11)
-loo_commit12 <- loo(commit_glmm12)
-loo_commit13 <- loo(commit_glmm13)
-loo_commit_takeleave <- loo_compare(loo_commit11, loo_commit12, loo_commit13)
-
 #Leave-taking tendency: Looking at condition within age [2.5,3.5]
 commit_glmm14 <- brm(leave_taking_verbal_and_nonverbal ~ condition_string + (1|location_string) + (1|order),
                      data = commit_leavetake_3yo,
@@ -407,7 +393,7 @@ commit_glmm16 <- brm(leave_taking_verbal_and_nonverbal ~ age_group_string + (1|l
 plot(commit_glmm16)
 pp_check(commit_glmm16, nsamples = 100)
 
-hypothesis(commit_glmm16, "age_groupOlder > 0")
+hypothesis(commit_glmm16, "age_group_stringOlder > 0")
 
 #Leave-taking tendency: Looking at age within you-framing
 commit_glmm17 <- brm(leave_taking_verbal_and_nonverbal ~ age_group_string + (1|location_string) + (1|order),
@@ -423,7 +409,7 @@ commit_glmm17 <- brm(leave_taking_verbal_and_nonverbal ~ age_group_string + (1|l
 plot(commit_glmm17)
 pp_check(commit_glmm17, nsamples = 100)
 
-hypothesis(commit_glmm17, "age_groupOlder > 0")
+hypothesis(commit_glmm17, "age_group_stringOlder > 0")
 
 ##Sharing
 #Data
@@ -502,11 +488,6 @@ greaterthan0_sharing <- hypothesis(sharing_glmm1,
                                    c("Intercept > 0",
                                      "age_group_stringOlder > 0",
                                      "gender_stringMale > 0"))
-
-loo_share1 <- loo(sharing_glmm1)
-loo_share2 <- loo(sharing_glmm2)
-loo_share3 <- loo(sharing_glmm3)
-loo_share <- loo_compare(loo_share1, loo_share2, loo_share3)
 
 #Sharing: Descriptive statistics
 number_erasers_shared_you_3 <- sharing %>% 
@@ -653,11 +634,6 @@ help_tendency_age <- table(helping$age_group_string, helping$help_n_y)
 help_tendency_condition <- table(helping$condition_string, helping$help_n_y)
 help_tendency_gender <- table(helping$gender_string, helping$help_n_y)
 
-loo_help1 <- loo(helping_glmm1)
-loo_help2 <- loo(helping_glmm2)
-loo_help3 <- loo(helping_glmm3)
-loo_help_tendency <- loo_compare(loo_help1, loo_help2, loo_help3)
-
 #Latency to help (Removed location and order random intercepts, produced divergences; included order fixed effect)
 helping_glmm4 <- brm(helping_latency|trunc(ub = 60) ~ age_group_string + gender_string + location_string,
                      data = help_latency,
@@ -725,11 +701,6 @@ greaterthan0_helplatency <- hypothesis(helping_glmm4,
                                          "gender_stringMale > 0",
                                          "location_stringMarbles > 0",
                                          "location_stringMOLS > 0"))
-
-loo_help4 <- loo(helping_glmm4)
-loo_help5 <- loo(helping_glmm5)
-loo_help6 <- loo(helping_glmm6)
-loo_help_latency <- loo_compare(loo_help4, loo_help5, loo_help6)
 
 ##Main Text: Table 4
 table_fixef <- rbind(fixef(commit_glmm1),
@@ -843,11 +814,6 @@ greaterthan0_commitsurv <- hypothesis(commit_glmm1_surv,
                                         "location_stringMarbles > 0",
                                         "location_stringMOLS > 0"))
 
-loo_commit1_surv <- loo(commit_glmm1_surv)
-loo_commit2_surv <- loo(commit_glmm2_surv)
-loo_commit3_surv <- loo(commit_glmm3_surv)
-loo_commit_surv <- loo_compare(loo_commit1_surv, loo_commit2_surv, loo_commit3_surv)
-
 #Helping: Cox PH models (Removed order and location random intercepts; included location fixed effect but not order fixed effect because too many levels of order)
 helping_glmm1_surv <- brm(helping_latency | cens(censored) ~ age_group_string + gender_string + location_string,
                           data = help_latency_surv,
@@ -894,11 +860,6 @@ greaterthan0_helpsurv <- hypothesis(helping_glmm1_surv,
                                       "gender_stringMale > 0",
                                       "location_stringMarbles > 0",
                                       "location_stringMOLS > 0"))
-
-loo_help1_surv <- loo(helping_glmm1_surv)
-loo_help2_surv <- loo(helping_glmm2_surv)
-loo_help3_surv <- loo(helping_glmm3_surv)
-loo_help_surv <- loo_compare(loo_help1_surv, loo_help2_surv, loo_help3_surv)
 
 #Supplementary Material Table 1
 commit_glmm1_surv_df <- fixef(commit_glmm1_surv) %>% 
