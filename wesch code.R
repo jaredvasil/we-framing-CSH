@@ -732,7 +732,7 @@ ggplot(fig2_commit_tendency, aes(x = age_group_string, fill = factor(approach_n_
         axis.title.y = element_text(vjust = 2),
         axis.title.x = element_text(vjust = 0.25))
 
-ggsave("Figure 2.png", height = 14, width = 14)
+ggsave("figures/figure_2.png", height = 14, width = 14)
 
 ##Main Text: Figure 3
 fig3_leave_taking <- leave_taking %>% 
@@ -752,7 +752,7 @@ ggplot(fig3_leave_taking, aes(x = condition_string, fill = factor(leave_taking_v
         axis.title.y = element_text(vjust = 2),
         axis.title.x = element_text(vjust = 0.25))
 
-ggsave("random/Figure 3.png", height = 14, width = 14)
+ggsave("figures/figure_3.png", height = 14, width = 14)
 
  ##Supplementary Material
 #Data
