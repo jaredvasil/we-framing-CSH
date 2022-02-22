@@ -358,7 +358,7 @@ commit_glmm14 <- brm(leave_taking_verbal_and_nonverbal ~ condition_string + (1|l
                      control = list(adapt_delta = 0.9999, max_treedepth = 50),
                      save_pars = save_pars(all = TRUE),
                      cores = 4)
-
+ 
 plot(commit_glmm14)
 pp_check(commit_glmm14, ndraws = 100)
 
